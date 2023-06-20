@@ -1,31 +1,41 @@
-import discord
-import random
-import webbrowser as web
+import discord #Imports the discord module.
+from discord.ext import commands #Imports discord extensions.
 
-# ayricaliklar (intents) değişkeni botun ayrıcalıklarını depolayacak
-intents = discord.Intents.default()
-# Mesajları okuma ayrıcalığını etkinleştirelim
-intents.message_content = True
-# istemci (client) değişkeniyle bir bot oluşturalım ve ayrıcalıkları ona aktaralım
-client = discord.Client(intents=intents)
-intents=discord.Intents.all()
-intents = discord.Intents()
-intents.members = True
+#The below code verifies the "client".
+client = commands.Bot(command_prefix='pb?')
+#The below code stores the token.
+token = "Your token"
 
+'''
+The below code displays if you have any errors publicly. This is useful if you don't want to display them in your output shell.
+'''
 @client.event
-async def on_ready():
-    print(f'Hi boyle girdim {client.user}')
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send('Please pass in all requirements :rolling_eyes:.')
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("You dont have all the requirements :angry:")
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-    elif message.content.startswith('$hello'):
-        #web.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-        await message.channel.send("AHAHAHAHAHAHAHAHAHA!")
+#The below code bans player.
+@client.command()
+@commands.has_permissions(ban_members = True)
+async def ban(ctx, member : discord.Member, *, reason = None):
+    await member.ban(reason = reason)
 
-@client.event
-async def on_member_join(member):
-    await member.send('Welcome to the server!')
+#The below code unbans player.
+@client.command()
+@commands.has_permissions(administrator = True)
+async def unban(ctx, *, member):
+    banned_users = await ctx.guild.bans()
+    member_name, member_discriminator = member.split("#")
 
-client.run("MTExNzg1NzQ2NDExMzcwOTIxNg.GhBGTN.fw9DD9zs6luVgnmlEQZYtM20TSqSNh2aBG_45o")
+    for ban_entry in banned_users:
+        user = ban_entry.user
+
+        if (user.name, user.discriminator) == (member_name, member_discriminator):
+            await ctx.guild.unban(user)
+            await ctx.send(f'Unbanned {user.mention}')
+            return
+
+#The below code runs the bot.
+client.run(token)
